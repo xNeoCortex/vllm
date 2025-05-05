@@ -45,6 +45,23 @@ class GuidedDecodingParams:
     whitespace_pattern: Optional[str] = None
     structural_tag: Optional[str] = None
 
+    def __deepcopy__(self, memo):
+        # Avoid recursive deepcopy; just copy all fields shallowly.
+        return GuidedDecodingParams(
+            json=copy.deepcopy(self.json, memo),
+            regex=self.regex,
+            choice=copy.deepcopy(self.choice, memo),
+            grammar=self.grammar,
+            json_object=self.json_object,
+            backend=self.backend,
+            backend_was_auto=self.backend_was_auto,
+            disable_fallback=self.disable_fallback,
+            disable_any_whitespace=self.disable_any_whitespace,
+            disable_additional_properties=self.disable_additional_properties,
+            whitespace_pattern=self.whitespace_pattern,
+            structural_tag=self.structural_tag,
+        )
+
     @staticmethod
     def from_optional(
         json: Optional[Union[dict, BaseModel, str]] = None,

@@ -340,6 +340,13 @@ def parse_output_message(message: Message) -> list[ResponseOutputItem]:
 
     output_items: list[ResponseOutputItem] = []
     recipient = message.recipient
+
+    # Fallback for empty/None channel: interpret as commentary if there is a
+    # recipient (tool/func call), otherwise as analysis (reasoning text).
+    channel = message.channel
+    if not channel:
+        channel = "commentary" if recipient is not None else "analysis"
+
     if recipient is not None and recipient.startswith("browser."):
         if len(message.content) != 1:
             raise ValueError("Invalid number of contents in browser message")
@@ -386,7 +393,7 @@ def parse_output_message(message: Message) -> list[ResponseOutputItem]:
             type="web_search_call",
         )
         output_items.append(web_search_item)
-    elif message.channel == "analysis":
+    elif channel == "analysis":
         for content in message.content:
             reasoning_item = ResponseReasoningItem(
                 id=f"rs_{random_uuid()}",
@@ -400,7 +407,7 @@ def parse_output_message(message: Message) -> list[ResponseOutputItem]:
                 status=None,
             )
             output_items.append(reasoning_item)
-    elif message.channel == "commentary":
+    elif channel == "commentary":
         if recipient is not None and recipient.startswith("functions."):
             function_name = recipient.split(".")[-1]
             for content in message.content:
@@ -433,7 +440,7 @@ def parse_output_message(message: Message) -> list[ResponseOutputItem]:
                 output_items.append(reasoning_item)
         else:
             raise ValueError(f"Unknown recipient: {recipient}")
-    elif message.channel == "final":
+    elif channel == "final":
         contents = []
         for content in message.content:
             output_text = ResponseOutputText(
